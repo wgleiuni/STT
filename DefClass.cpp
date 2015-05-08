@@ -274,16 +274,16 @@ void STT::go()
     initial();
     for (i=0;i<(int)numdt_;i++)
     {
+        if (i%10==0)
+        {
+            record(); 
+        }
         Rk4::Sigma::integrate();
         Rk4::onestep();
         *(mag[0]+i)=n[0];
         *(mag[1]+i)=n[1];
         *(mag[2]+i)=n[2];
 //        if (i%100==0) std::cout<< i << std::endl;
-        if (i%10==0)
-        {
-            record(); 
-        }
     }
 }
 
