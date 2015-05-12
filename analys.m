@@ -1,24 +1,24 @@
-step=2500;
-nx=zeros(step,20000);
-figure
-set(gcf,'color','w')
-hold on
+step=1120;
+nx=zeros(step,100000);
+% figure
+% set(gcf,'color','w')
+% hold on
 for i=1:step
-    eval(['load data/data27/nx',num2str(i),'.mat']);
+    eval(['load data/data39/nx',num2str(i),'.mat']);
     temp=eval(['nx',num2str(i)]);
     if ~isempty(temp)
         nx(i,:)=temp;
-        y=findpeaks(temp(end-10000:end));
-        x=ones(length(y),1)*(-1+2/step*i);
-        scatter(x,y,2,'b')
+%         y=findpeaks(temp(end-10000:end));
+%         x=ones(length(y),1)*(-1+2/step*i);
+%         scatter(x,y,2,'b')
         eval(['clear nx',num2str(i)])
     end
 end
 %%
-ny=zeros(step,20000);
+ny=zeros(step,100000);
 
 for i=1:step
-    eval(['load data/data27/ny',num2str(i),'.mat']);
+    eval(['load data/data39/ny',num2str(i),'.mat']);
     temp=eval(['ny',num2str(i)]);
     if ~isempty(temp)
         ny(i,:)=temp;
@@ -26,10 +26,10 @@ for i=1:step
     end
 end
 %%
-nz=zeros(step,20000);
+nz=zeros(step,100000);
 
 for i=1:step
-    eval(['load data/data27/nz',num2str(i),'.mat']);
+    eval(['load data/data39/nz',num2str(i),'.mat']);
     temp=eval(['nz',num2str(i)]);
     if ~isempty(temp)
         nz(i,:)=temp;
@@ -38,23 +38,35 @@ for i=1:step
 end
 
 %%
-sx=zeros(step,1000000);
+sx=zeros(step,100000);
 
 for i=1:step
-    eval(['load data/data24/s1',num2str(i),'.txt']);
-    temp=eval(['s1',num2str(i)]);
+    eval(['load data/data39/sx',num2str(i),'.mat']);
+    temp=eval(['sx',num2str(i)]);
     if ~isempty(temp)
         sx(i,:)=temp(:,2);
-        eval(['clear s1',num2str(i)])
+        eval(['clear sx',num2str(i)])
+    end
+end
+
+%%
+sy=zeros(step,100000);
+
+for i=1:step
+    eval(['load data/data39/sy',num2str(i),'.mat']);
+    temp=eval(['sy',num2str(i)]);
+    if ~isempty(temp)
+        sy(i,:)=temp(:,2);
+        eval(['clear sy',num2str(i)])
     end
 end
 %%
-rule=1;
+rule=2;
 omega=10;
 tau=2*pi/(omega);
 dt=0.01;
 numtau=floor(tau/dt);
-cut=1000;
+cut=10000;
 %%
 figure
 set(gcf,'color','w')
@@ -121,7 +133,7 @@ if rule==1
     end
 elseif rule==2
     for i=1:step
-        y=nz(i,end-cut:numtau:end);
+        y=sx(i,end-cut:numtau:end);
         x=ones(length(y),1)*i;
         scatter(x,y,2,'m')
     end
@@ -155,6 +167,14 @@ elseif 1==1
     end
 end
 
+%% calculate the sigma under initial condition
+intesig=zeros(21,21);
+for i=1:21
+    for j=1:21
+        intesig(i,j)=integral(@(x)STT_sigma1(x,nx(i,j),ny(i,j),nz(i,j)),-pi/2,pi/2);
+    end
+end
+
 %%
 j=851;
 i=10540;
@@ -176,6 +196,7 @@ for i=1:length(theta)
 end
 
 %% 3D for phase space
+figure
 x1=nx(:,1);
 y1=ny(:,1);
 z1=nz(:,1);
@@ -186,3 +207,28 @@ Z1=reshape(z1,50,50);
 C=reshape(t,50,50);
 surf(X1,Y1,Z1,C)
 set(gcf,'color','w')
+caxis([-1 0])
+colormap jet
+colorbar
+xlabel('nx')
+ylabel('ny')
+zlabel('nz')
+
+%% 3D for phase space -- current
+figure
+x1=nx(:,1);
+y1=ny(:,1);
+z1=nz(:,1);
+tc=mean(sx(:,end-cut:end),2);
+X1=reshape(x1,50,50);
+Y1=reshape(y1,50,50);
+Z1=reshape(z1,50,50);
+Cc=reshape(tc,50,50);
+surf(X1,Y1,Z1,Cc)
+set(gcf,'color','w')
+%caxis([-1 0])
+colormap jet
+colorbar
+xlabel('nx')
+ylabel('ny')
+zlabel('nz')

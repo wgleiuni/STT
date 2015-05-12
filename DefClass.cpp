@@ -79,8 +79,9 @@ void Para::get(int N,double x)
         case 13:
             double theta,phi;
 
-            theta=-M_PI/2.0+M_PI/Start_*(N_/(int)End_);
-            phi=2*M_PI/End_*(N_%(int)End_);
+            theta=-M_PI/2.0+M_PI/(Start_-1)*((N_-1)/(int)End_);
+            std::cout << theta << std::endl;
+            phi=2*M_PI/(End_-1)*((N_-1)%(int)End_);
             n[0]=cos(theta)*cos(phi);
             n[1]=cos(theta)*sin(phi);
             n[2]=sin(theta);
@@ -145,7 +146,14 @@ void Sigma::integrate()
     for (i=0;i<N+1;i++)
     {
         theta=-M_PI/2+i*dtheta;
-        t2=T2(theta);
+        if (i==0 || i==N)
+        {
+            t2=0.0;
+        }
+        else
+        {
+            t2=T2(theta);
+        }
 
         if (i%3==0)
         {
@@ -158,8 +166,8 @@ void Sigma::integrate()
             sigma2_=sigma2_+3.0*t2*cos(theta);
         }
     }
-    sigma1_=sigma1_-T2(-M_PI/2)*sin(-M_PI/2)-T2(M_PI/2)*sin(M_PI/2);
-    sigma2_=sigma2_-T2(-M_PI/2)*cos(-M_PI/2)-T2(M_PI/2)*cos(M_PI/2);
+//    sigma1_=sigma1_-T2(-M_PI/2)*sin(-M_PI/2)-T2(M_PI/2)*sin(M_PI/2);
+//    sigma2_=sigma2_-T2(-M_PI/2)*cos(-M_PI/2)-T2(M_PI/2)*cos(M_PI/2);
 
     sigma1_=3.0/8.0*dtheta*sigma1_;
     sigma2_=-3.0/8.0*dtheta*sigma2_;
@@ -219,16 +227,22 @@ double Rk4::dt(int N,double tau,double* p, double* s)
     switch (N) {
         case 1:
 //        std::cout<< p[0] << " " << p[1] << " " << p[2] << " " << s[0] << " " << s[2] << std::endl;
-            out=-(a*p[1]*p[1]+a*p[2]*p[2]-b*p[2]*s[1]-a*b*p[1]*p[1]*s[0]-a*b*p[2]*p[2]*s[0]+a*b*p[0]*p[1]*s[1])
+//            out=-(a*p[1]*p[1]+a*p[2]*p[2]-b*p[2]*s[1]-a*b*p[1]*p[1]*s[0]-a*b*p[2]*p[2]*s[0]+a*b*p[0]*p[1]*s[1])
+//                /(a*a*(p[0]*p[0]+p[1]*p[1]+p[2]*p[2])+1.0);
+            out=(a*p[1]*p[1]+a*p[2]*p[2]+b*p[2]*s[1]+a*b*p[1]*p[1]*s[0]+a*b*p[2]*p[2]*s[0]-a*b*p[0]*p[1]*s[1])
                 /(a*a*(p[0]*p[0]+p[1]*p[1]+p[2]*p[2])+1.0);
 //            std::cout<< a << " " << b << " " << out << std::endl;
             break;
         case 2:
-            out=(p[2]+a*p[0]*p[1]-b*p[2]*s[0]+a*b*p[0]*p[0]*s[1]+a*b*p[2]*p[2]*s[1]-a*b*p[0]*p[1]*s[0])
+//            out=(p[2]+a*p[0]*p[1]-b*p[2]*s[0]+a*b*p[0]*p[0]*s[1]+a*b*p[2]*p[2]*s[1]-a*b*p[0]*p[1]*s[0])
+//                /(a*a*(p[0]*p[0]+p[1]*p[1]+p[2]*p[2])+1.0);
+            out=-(p[2]+a*p[0]*p[1]+b*p[2]*s[0]-a*b*p[0]*p[0]*s[1]-a*b*p[2]*p[2]*s[1]+a*b*p[0]*p[1]*s[0])
                 /(a*a*(p[0]*p[0]+p[1]*p[1]+p[2]*p[2])+1.0);
             break;
         case 3:
-            out=(a*p[0]*p[2]-p[1]-b*p[0]*s[1]+b*p[1]*s[0]-a*b*p[0]*p[2]*s[0]-a*b*p[1]*p[2]*s[1])
+//            out=(a*p[0]*p[2]-p[1]-b*p[0]*s[1]+b*p[1]*s[0]-a*b*p[0]*p[2]*s[0]-a*b*p[1]*p[2]*s[1])
+//                /(a*a*(p[0]*p[0]+p[1]*p[1]+p[2]*p[2])+1.0);
+            out=-(a*p[0]*p[2]-p[1]+b*p[0]*s[1]-b*p[1]*s[0]+a*b*p[0]*p[2]*s[0]+a*b*p[1]*p[2]*s[1])
                 /(a*a*(p[0]*p[0]+p[1]*p[1]+p[2]*p[2])+1.0);
             break;
     }
