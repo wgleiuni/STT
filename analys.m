@@ -1,10 +1,10 @@
-step=1120;
-nx=zeros(step,100000);
+step=10000;
+nx=zeros(step,40000);
 % figure
 % set(gcf,'color','w')
 % hold on
 for i=1:step
-    eval(['load data/data39/nx',num2str(i),'.mat']);
+    eval(['load data/data55/nx',num2str(i),'.mat']);
     temp=eval(['nx',num2str(i)]);
     if ~isempty(temp)
         nx(i,:)=temp;
@@ -15,10 +15,10 @@ for i=1:step
     end
 end
 %%
-ny=zeros(step,100000);
+ny=zeros(step,40000);
 
 for i=1:step
-    eval(['load data/data39/ny',num2str(i),'.mat']);
+    eval(['load data/data55/ny',num2str(i),'.mat']);
     temp=eval(['ny',num2str(i)]);
     if ~isempty(temp)
         ny(i,:)=temp;
@@ -26,10 +26,10 @@ for i=1:step
     end
 end
 %%
-nz=zeros(step,100000);
+nz=zeros(step,40000);
 
 for i=1:step
-    eval(['load data/data39/nz',num2str(i),'.mat']);
+    eval(['load data/data55/nz',num2str(i),'.mat']);
     temp=eval(['nz',num2str(i)]);
     if ~isempty(temp)
         nz(i,:)=temp;
@@ -41,7 +41,7 @@ end
 sx=zeros(step,100000);
 
 for i=1:step
-    eval(['load data/data39/sx',num2str(i),'.mat']);
+    eval(['load data/data50/sx',num2str(i),'.mat']);
     temp=eval(['sx',num2str(i)]);
     if ~isempty(temp)
         sx(i,:)=temp(:,2);
@@ -53,20 +53,20 @@ end
 sy=zeros(step,100000);
 
 for i=1:step
-    eval(['load data/data39/sy',num2str(i),'.mat']);
+    eval(['load data/data50/sy',num2str(i),'.mat']);
     temp=eval(['sy',num2str(i)]);
     if ~isempty(temp)
-        sy(i,:)=temp(:,2);
+        sy(i,:)=temp(:,1);
         eval(['clear sy',num2str(i)])
     end
 end
 %%
-rule=2;
+rule=1;
 omega=10;
 tau=2*pi/(omega);
 dt=0.01;
 numtau=floor(tau/dt);
-cut=10000;
+cut=5000;
 %%
 figure
 set(gcf,'color','w')
@@ -80,7 +80,7 @@ if rule==1
 elseif rule==2
     for i=1:step
         y=nx(i,end-cut:numtau:end);
-        x=ones(length(y),1)*i;
+        x=ones(length(y),1)*i;oring spin-transfer torques and spin p
         scatter(x,y,2,'b')
     end
 end
@@ -135,6 +135,24 @@ elseif rule==2
     for i=1:step
         y=sx(i,end-cut:numtau:end);
         x=ones(length(y),1)*i;
+        scatter(x,y,2,'b')
+    end
+end
+
+%%
+figure
+set(gcf,'color','w')
+hold on
+if rule==1
+    for i=1:step
+        y=findpeaks(sy(i,end-cut:end));
+        x=ones(length(y),1)*i;
+        scatter(x,y,2,'b')
+    end
+elseif rule==2
+    for i=1:step
+        y=sx(i,end-cut:numtau:end);
+        x=ones(length(y),1)*i;
         scatter(x,y,2,'m')
     end
 end
@@ -175,6 +193,16 @@ for i=1:21
     end
 end
 
+%% calculate sigma under all initial condition
+len=100;
+[X,Y,Z]=sphere(len-1);
+intesig=zeros(len,len);
+for i=1:len
+    for j=1:len
+        intesig(i,j)=integral(@(x)STT_sigma1(x,X(i,j),Y(i,j),Z(i,j)),-pi/2,pi/2);
+    end
+end
+figure;surf(X,Y,Z,intesig,'linestyle','none')
 %%
 j=851;
 i=10540;
@@ -197,14 +225,18 @@ end
 
 %% 3D for phase space
 figure
+leng=100;
 x1=nx(:,1);
 y1=ny(:,1);
 z1=nz(:,1);
 t=mean(ny(:,end-cut:end),2);
-X1=reshape(x1,50,50);
-Y1=reshape(y1,50,50);
-Z1=reshape(z1,50,50);
-C=reshape(t,50,50);
+X1=reshape(x1,leng,leng);
+Y1=reshape(y1,leng,leng);
+Z1=reshape(z1,leng,leng);
+C=reshape(t,leng,leng);
+C1=C;
+C1(C1>-0.5)=0;
+C1(C1<-0.5)=-1;
 surf(X1,Y1,Z1,C)
 set(gcf,'color','w')
 caxis([-1 0])
@@ -214,6 +246,9 @@ xlabel('nx')
 ylabel('ny')
 zlabel('nz')
 
+%%
+figure;surf(X1(:,26:end),Y1(:,26:end),Z1(:,26:end),C(:,26:end),'linestyle','none')
+figure;surf(X1(:,1:25),Y1(:,1:25),Z1(:,1:25),C(:,1:25),'linestyle','none')
 %% 3D for phase space -- current
 figure
 x1=nx(:,1);
@@ -232,3 +267,34 @@ colorbar
 xlabel('nx')
 ylabel('ny')
 zlabel('nz')
+
+%% manmual method to generate sphere coordinates
+start_=50;  end_=50; Len_=2500;
+N_=10;
+dtheta=pi/(start_-1);
+dphi=2*pi/(end_-1);
+nn=0:2499;
+ntheta=floor(nn/end_);
+nphi=mod(nn,end_);
+theta=-pi/2+dtheta*ntheta;
+phi=dphi*nphi;
+tnx=cos(theta).*cos(phi);
+tny=cos(theta).*sin(phi);
+tnz=sin(theta);
+
+%% FFT
+ftemp=ny(900,end-cut:end);
+dt=0.001*10;
+Fs=1/dt;
+L=length(ftemp);
+t=(0:L-1)*dt;
+NFFT=2^nextpow2(L);
+Y = fft(ftemp,NFFT)/L;
+f = Fs/2*linspace(0,1,NFFT/2+1);
+
+% Plot single-sided amplitude spectrum.
+figure
+semilogy(f,2*abs(Y(1:NFFT/2+1))) 
+title('Single-Sided Amplitude Spectrum of y(t)')
+xlabel('Frequency (Hz)')
+ylabel('|Y(f)|')

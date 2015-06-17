@@ -183,28 +183,55 @@ void Rk4::onestep()
     double k[4],l[4],j[4],p[3],s[2],tau;
     int i;
 
-    s[0]=sigma1_;
-    s[1]=sigma2_;
+//    s[0]=sigma1_;
+//    s[1]=sigma2_;
 
     double b=h_*V_*(dc_+ac_*cos(omega_*tau_));
     rsigma1_=b*sigma1_;
     rsigma2_=b*sigma2_;
+
+    double tn[3];
 
     for (i=1;i<5;i++)
     {
         switch (i) {
             case 1:
                 tau=tau_;
-                p[0]=n[0];  p[1]=n[1];  p[2]=n[2];  break;
+                p[0]=n[0];  p[1]=n[1];  p[2]=n[2]; 
+                Sigma::integrate();
+                s[0]=sigma1_;
+                s[1]=sigma2_;
+                break;
             case 2:
                 tau=tau_+dt_/2.0;
-                p[0]=n[0]+dt_/2.0*k[i-1]; p[1]=n[1]+dt_/2.0*l[i-1]; p[2]=n[2]+dt_/2.0*j[i-1]; break;
+                p[0]=n[0]+dt_/2.0*k[i-1]; p[1]=n[1]+dt_/2.0*l[i-1]; p[2]=n[2]+dt_/2.0*j[i-1]; 
+                tn[0]=n[0]; tn[1]=n[1]; tn[2]=n[2];
+                n[0]=p[0]; n[1]=p[1]; n[2]=p[2];
+                Sigma::integrate();
+                s[0]=sigma1_;
+                s[1]=sigma2_;
+                n[0]=tn[0]; n[1]=tn[1]; n[2]=tn[2];
+                break;
             case 3:
                 tau=tau_+dt_/2.0;
-                p[0]=n[0]+dt_/2.0*k[i-1]; p[1]=n[1]+dt_/2.0*l[i-1]; p[2]=n[2]+dt_/2.0*j[i-1]; break;
+                p[0]=n[0]+dt_/2.0*k[i-1]; p[1]=n[1]+dt_/2.0*l[i-1]; p[2]=n[2]+dt_/2.0*j[i-1];
+                tn[0]=n[0]; tn[1]=n[1]; tn[2]=n[2];
+                n[0]=p[0]; n[1]=p[1]; n[2]=p[2];
+                Sigma::integrate();
+                s[0]=sigma1_;
+                s[1]=sigma2_;
+                n[0]=tn[0]; n[1]=tn[1]; n[2]=tn[2];
+                break;
             case 4:
                 tau=tau_+dt_;
-                p[0]=n[0]+dt_*k[i-1]; p[1]=n[1]+dt_*l[i-1]; p[2]=n[2]+dt_*j[i-1]; break;
+                p[0]=n[0]+dt_*k[i-1]; p[1]=n[1]+dt_*l[i-1]; p[2]=n[2]+dt_*j[i-1];
+                tn[0]=n[0]; tn[1]=n[1]; tn[2]=n[2];
+                n[0]=p[0]; n[1]=p[1]; n[2]=p[2];
+                Sigma::integrate();
+                s[0]=sigma1_;
+                s[1]=sigma2_;
+                n[0]=tn[0]; n[1]=tn[1]; n[2]=tn[2];
+                break;
         }
         k[i]=dt(1,tau,p,s);
         l[i]=dt(2,tau,p,s);
@@ -288,11 +315,11 @@ void STT::go()
     initial();
     for (i=0;i<(int)numdt_;i++)
     {
-        if (i%10==0)
-        {
+//        if (i%10==0)
+//        {
             record(); 
-        }
-        Rk4::Sigma::integrate();
+//        }
+//        Rk4::Sigma::integrate();
         Rk4::onestep();
         *(mag[0]+i)=n[0];
         *(mag[1]+i)=n[1];
